@@ -8,9 +8,9 @@ Fine-tune DeBERTa by SST-2
 ```
 git clone https://github.com/toshi835/deberta_dlstudy2022
 ```
-1. Download SST-2  
+2. Download SST-2  
 ref: https://github.com/nyu-mll/GLUE-baselines
-1. set dataset to `data/`
+3. set dataset to `data/`
 
 ### Training
 ```
