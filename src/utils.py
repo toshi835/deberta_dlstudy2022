@@ -37,7 +37,7 @@ class CreateDataset:
             for i, d in enumerate(data):
                 if i == 0:  # ignore index
                     continue
-                src_text, target = d.split('\t')
+                src_text, target = d.strip().split('\t')
                 src = self.tokenizer.encode_plus(
                     src_text, truncation=True, max_length=self.max_len, padding='max_length')
                 if self.test:

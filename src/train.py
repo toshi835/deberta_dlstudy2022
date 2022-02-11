@@ -37,7 +37,7 @@ def main(args):
 
     print('Start training')
     for epoch in range(args.epoch):
-        loss_train = 0
+        loss_train = 0.0
 
         model = model.cuda(args.gpus)
         model.train()

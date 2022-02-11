@@ -25,7 +25,7 @@ def main(args):
         assert False
 
     # Create model
-    model = DebertaClass(num_class)
+    model = DebertaClass(args.model_name, num_class)
     model.load_state_dict(torch.load(args.model_path))
     model = model.cuda(args.gpus)
 
@@ -54,9 +54,9 @@ def main(args):
     print()
 
     # Sample Result
+    print('Sentence: Gold label, Predict label')
     for i in range(10):
-        print('Sentence, Gold label, Predict label')
-        print('{}, {}, {}'.format(texts[i], golds[i], preds[i]))
+        print('{}: {}, {}'.format(texts[i], golds[i], preds[i]))
 
 
 if __name__ == '__main__':
@@ -65,7 +65,7 @@ if __name__ == '__main__':
         '-model_path', required=True, type=str)
     parser.add_argument('-gpus', default=0, type=int)
     parser.add_argument(
-        '-data_path', default='../data/SST-2/test.tsv', type=str)
+        '-data_path', default='../data/SST-2/dev.tsv', type=str)
     parser.add_argument(
         '-model_name', default='microsoft/deberta-base', type=str)
     args = parser.parse_args()

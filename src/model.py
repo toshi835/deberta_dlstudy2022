@@ -1,5 +1,6 @@
 import torch
 from transformers import DebertaModel
+from sklearn.metrics import accuracy_score
 
 
 class DebertaClass(torch.nn.Module):
@@ -20,8 +21,8 @@ class DebertaClass(torch.nn.Module):
 def calculate_loss_and_accuracy(model, criterion, loader, gpus):
     model.eval()
     loss = 0.0
-    total = 0
-    correct = 0
+    golds = []
+    preds = []
     with torch.no_grad():
         for data in loader:
             # set gpu device
@@ -36,8 +37,8 @@ def calculate_loss_and_accuracy(model, criterion, loader, gpus):
             loss += criterion(outputs, labels).item()
 
             # calculate acculacy
-            pred = torch.argmax(outputs, dim=-1).cpu().numpy()
-            total += len(labels)
-            correct += (pred == labels).sum().item()
+            pred = torch.argmax(outputs, dim=-1).cpu().tolist()
+            preds.extend(pred)
+            golds.extend(labels.cpu().tolist())
 
-    return loss / len(loader), correct / total
+    return loss / len(loader), accuracy_score(preds, golds)
