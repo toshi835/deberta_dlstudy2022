@@ -1,4 +1,3 @@
-from sklearn.utils import shuffle
 import torch
 import argparse
 from tqdm import tqdm
@@ -12,6 +11,9 @@ from model import DebertaClass, calculate_loss_and_accuracy
 
 
 def main(args):
+    if not torch.cuda.is_available():
+        print('Could not find gpu resources')
+        assert False
     num_class = 2
 
     # Preprocessing
@@ -23,29 +25,26 @@ def main(args):
         dataset, test_size=args.dev_size, shuffle=True)
     print('Train data size: {}'.format(len(dataset_train)))
     print('Development data size: {}'.format(len(dataset_dev)))
-    train_loader = DataLoader(dataset=dataset_train, batch_size=16)
-    dev_loader = DataLoader(dataset=dataset_dev, batch_size=16)
+    train_loader = DataLoader(dataset=dataset_train,
+                              batch_size=args.batch_size)
+    dev_loader = DataLoader(dataset=dataset_dev, batch_size=args.batch_size)
 
     # creating model
     model = DebertaClass(args.model_name, num_class)
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.AdamW(params=model.parameters(), lr=args.lr)
 
-    if not torch.cuda.is_available():
-        print('Could not find gpu resorces')
-        assert False
-
     print('Start training')
     for epoch in range(args.epoch):
         loss_train = 0.0
 
-        model = model.cuda(args.gpus)
+        model = model.cuda(args.gpu_id)
         model.train()
         for data in tqdm(train_loader):
             # set gpu devices
-            ids = data['ids'].cuda(args.gpus)
-            mask = data['mask'].cuda(args.gpus)
-            labels = data['labels'].cuda(args.gpus)
+            ids = data['ids'].cuda(args.gpu_id)
+            mask = data['mask'].cuda(args.gpu_id)
+            labels = data['labels'].cuda(args.gpu_id)
 
             # forward
             optimizer.zero_grad()
@@ -59,7 +58,7 @@ def main(args):
             optimizer.step()
 
         loss_valid, acc_valid = calculate_loss_and_accuracy(
-            model, criterion, dev_loader, args.gpus)
+            model, criterion, dev_loader, args.gpu_id)
 
         print('Epoch [{}], train_loss: {:.4f}, val_loss: {:.4f}, val_acc: {:.4f}'.format(
             epoch + 1, loss_train/len(train_loader), loss_valid, acc_valid))
@@ -72,9 +71,10 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-gpus', default=0, type=int)
+    parser.add_argument('-gpu_id', default=0, type=int)
     parser.add_argument('-lr', default=2e-5, type=float)
     parser.add_argument('-epoch', default=10, type=int)
+    parser.add_argument('-batch_size', default=40, type=int)
     parser.add_argument('-dev_size', default=872, type=int)
     parser.add_argument(
         '-data_path', default='../data/SST-2/train.tsv', type=str)

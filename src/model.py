@@ -11,14 +11,19 @@ class DebertaClass(torch.nn.Module):
         self.classifier = torch.nn.Linear(768, int(output_size))
 
     def forward(self, ids, mask):
+        # encoder
         outputs = self.deberta(ids, attention_mask=mask)
+        # get hidden state of [CLS]
         encoder_layer = outputs.last_hidden_state[:, 0]
+
+        # decoder
         droped_output = self.dropout(encoder_layer)
         logits = self.classifier(droped_output)
+        
         return logits
 
 
-def calculate_loss_and_accuracy(model, criterion, loader, gpus):
+def calculate_loss_and_accuracy(model, criterion, loader, gpu_id):
     model.eval()
     loss = 0.0
     golds = []
@@ -26,9 +31,9 @@ def calculate_loss_and_accuracy(model, criterion, loader, gpus):
     with torch.no_grad():
         for data in loader:
             # set gpu device
-            ids = data['ids'].cuda(gpus)
-            mask = data['mask'].cuda(gpus)
-            labels = data['labels'].cuda(gpus)
+            ids = data['ids'].cuda(gpu_id)
+            mask = data['mask'].cuda(gpu_id)
+            labels = data['labels'].cuda(gpu_id)
 
             # forward
             outputs = model.forward(ids, mask)

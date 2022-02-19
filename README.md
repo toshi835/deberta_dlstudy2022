@@ -3,20 +3,20 @@
 Fine-tune DeBERTa by SST-2
 
 ## How to use
-### Preparing
+### Prepare
 1. install
 ```
 git clone https://github.com/toshi835/deberta_dlstudy2022
 ```
 2. Download SST-2  
 ref: https://github.com/nyu-mll/GLUE-baselines
-3. set dataset to `data/`
+3. set SST-2 dataset to `data/`
 
-### Training
+### Train
 ```
-python train.py -gpus 0 -epoch 10
+python train.py -gpu_id 0 -epoch 10 -batch_size 40
 ```
 ### Test
 ```
-python test.py -model_path ../data/sst2_epoch1.pt -gpus 0
+python test.py -model_path ../data/sst2_epoch1.pt -gpu_id 0
 ```

@@ -11,23 +11,22 @@ from model import DebertaClass
 
 
 def main(args):
+    if not torch.cuda.is_available():
+        print('Could not find gpu resources')
+        assert False
     num_class = 2
 
     # Preprocessing
     tokenizer = DebertaTokenizer.from_pretrained(args.model_name)
-    # load dateset
+    # Load dateset
     dataset_test = CreateDataset(args.data_path, tokenizer, test=True)
     print('Test data size: {}'.format(len(dataset_test)))
-    test_loader = DataLoader(dataset=dataset_test, batch_size=16)
-
-    if not torch.cuda.is_available():
-        print('Could not find gpu resorces')
-        assert False
+    test_loader = DataLoader(dataset=dataset_test, batch_size=args.batch_size)
 
     # Create model
     model = DebertaClass(args.model_name, num_class)
     model.load_state_dict(torch.load(args.model_path))
-    model = model.cuda(args.gpus)
+    model = model.cuda(args.gpu_id)
 
     model.eval()
     texts = []
@@ -36,8 +35,8 @@ def main(args):
     with torch.no_grad():
         for data in tqdm(test_loader):
             # set gpu devices
-            ids = data['ids'].cuda(args.gpus)
-            mask = data['mask'].cuda(args.gpus)
+            ids = data['ids'].cuda(args.gpu_id)
+            mask = data['mask'].cuda(args.gpu_id)
 
             # Predict
             outputs = model.forward(ids, mask)
@@ -56,14 +55,15 @@ def main(args):
     # Sample Result
     print('Sentence: Gold label, Predict label')
     for i in range(10):
-        print('{}: {}, {}'.format(texts[i], golds[i], preds[i]))
+        print('{} ({}, {})'.format(texts[i], golds[i], preds[i]))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-model_path', required=True, type=str)
-    parser.add_argument('-gpus', default=0, type=int)
+    parser.add_argument('-gpu_id', default=0, type=int)
+    parser.add_argument('-batch_size', default=40, type=int)
     parser.add_argument(
         '-data_path', default='../data/SST-2/dev.tsv', type=str)
     parser.add_argument(
